@@ -1,0 +1,8 @@
+.pio
+sdkconfig
+sdkconfig.old
+dependencies.lock
+build/
+.vscode/.browse.c_cpp.db*
+.vscode/ipch
+GITHUB_CHANGELOG.md

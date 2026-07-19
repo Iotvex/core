@@ -1,0 +1,73 @@
+name: release
+
+on:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Cocogitto
+        uses: cocogitto/cocogitto-action@v3
+        with:
+          check: true
+          check-latest-tag-only: true
+          release: false
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: SemVer bump
+        id: bump
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF_NAME}" = "dev" ]; then
+            echo "Pre-release bump on dev (dev.*)"
+            cog bump --auto --pre
+          else
+            echo "Stable bump on main"
+            cog bump --auto
+          fi
+          VERSION="$(git describe --tags --abbrev=0)"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Bumped to ${VERSION}"
+
+      - name: Push release commit and tag
+        if: steps.bump.outcome == 'success' && steps.bump.outputs.version != ''
+        run: git push origin "HEAD:${GITHUB_REF_NAME}" --follow-tags
+
+      - name: Build GitHub Release notes
+        if: steps.bump.outcome == 'success' && steps.bump.outputs.version != ''
+        run: |
+          cog changelog --at "${{ steps.bump.outputs.version }}" -t full_hash > GITHUB_CHANGELOG.md
+          cat GITHUB_CHANGELOG.md
+
+      - name: Publish GitHub Release
+        if: steps.bump.outcome == 'success' && steps.bump.outputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.version }}
+          name: ${{ steps.bump.outputs.version }}
+          body_path: GITHUB_CHANGELOG.md
+          generate_release_notes: false
+          prerelease: ${{ github.ref_name == 'dev' }}
+
+      - name: No release needed
+        if: steps.bump.outcome != 'success' || steps.bump.outputs.version == ''
+        run: echo "No SemVer bump for this push (chore/docs-only or already released)."

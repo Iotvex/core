@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/src/errors",
+        "${workspaceFolder}/src/log",
+        "${env:USERPROFILE}/.platformio/packages/framework-espidf/components/**"
+      ],
+      "defines": [
+        "ESP_PLATFORM"
+      ],
+      "compilerPath": "${env:USERPROFILE}/.platformio/packages/toolchain-riscv32-esp/bin/riscv32-esp-elf-g++.exe",
+      "cStandard": "gnu17",
+      "cppStandard": "gnu++17",
+      "intelliSenseMode": "gcc-x64"
+    }
+  ],
+  "version": 4
+}

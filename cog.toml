@@ -1,0 +1,35 @@
+# Cocogitto — SemVer releases from Conventional Commits (no Node).
+# Docs: https://docs.cocogitto.io/
+
+from_latest_tag = true
+ignore_merge_commits = true
+ignore_fixup_commits = true
+tag_prefix = "v"
+skip_ci = "[skip ci]"
+branch_whitelist = ["main", "dev"]
+
+# Default pre-release pattern for: cog bump --auto --pre
+# → v0.2.0-dev.0, v0.2.0-dev.1, ...
+pre = "dev.*"
+
+# Keep idf_component.yml + library.json + README in sync before the bump commit.
+pre_bump_hooks = [
+    "bash scripts/sync-version.sh {{version}}",
+]
+
+[changelog]
+path = "CHANGELOG.md"
+template = "remote"
+remote = "github.com"
+owner = "Iotvex"
+repository = "core"
+
+[commit_types]
+chore = { changelog_title = "Miscellaneous", omit_from_changelog = true }
+ci = { changelog_title = "CI", omit_from_changelog = true }
+docs = { changelog_title = "Documentation", omit_from_changelog = false }
+style = { changelog_title = "Style", omit_from_changelog = true }
+refactor = { changelog_title = "Refactor", omit_from_changelog = false }
+perf = { changelog_title = "Performance", omit_from_changelog = false }
+test = { changelog_title = "Tests", omit_from_changelog = true }
+build = { changelog_title = "Build", omit_from_changelog = true }

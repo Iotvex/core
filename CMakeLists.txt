@@ -1,0 +1,11 @@
+idf_component_register(
+    SRCS
+        "src/errors/errors.cpp"
+        "src/log/log.cpp"
+    INCLUDE_DIRS
+        "include"
+        "src/errors"
+        "src/log"
+    REQUIRES
+        log
+)
