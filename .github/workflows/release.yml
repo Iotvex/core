@@ -48,10 +48,32 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          # Ensure remote tags are present (including pre-releases).
           git fetch --tags --force origin
 
-          BEFORE_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          # Latest SemVer tag reachable from HEAD, including pre-releases.
+          # cog `from_latest_tag` ignores pre-releases when deciding the next
+          # core version, so without this gate every push to `dev` would mint
+          # another pre-release until feats are merged to a stable main tag.
+          LATEST_TAG="$(git tag --merged HEAD --list 'v*' | sort -V | tail -n1 || true)"
+          echo "Latest reachable tag: ${LATEST_TAG:-<none>}"
+
+          if [ -n "${LATEST_TAG}" ]; then
+            RANGE="${LATEST_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          echo "Commits in range ${RANGE}:"
+          git log ${RANGE} --oneline || true
+
+          RELEASABLE="$(git log ${RANGE} --pretty=%s | grep -E '^(feat|fix)(\(.+\))?(!)?:' || true)"
+          if [ -z "${RELEASABLE}" ]; then
+            echo "No feat/fix commits since ${LATEST_TAG:-repo start}; skip bump"
+            exit 1
+          fi
+
+          echo "Releasable commits:"
+          printf '%s\n' "${RELEASABLE}"
 
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
             echo "Pre-release bump on dev (dev.*)"
@@ -61,17 +83,12 @@ jobs:
             cog bump --auto
           fi
 
-          # Prefer the tag created by this bump, not an older reachable tag.
           VERSION="$(git tag --points-at HEAD | head -n1)"
           if [ -z "${VERSION}" ]; then
             VERSION="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
           fi
           if [ -z "${VERSION}" ]; then
-            VERSION="$(git describe --tags --abbrev=0)"
-          fi
-
-          if [ "${VERSION}" = "${BEFORE_TAG}" ]; then
-            echo "Bump did not create a new tag (still ${VERSION})"
+            echo "Bump produced no tag on HEAD"
             exit 1
           fi
 
@@ -83,7 +100,6 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ steps.bump.outputs.version }}"
-          # --follow-tags only pushes annotated tags; push the bump tag explicitly.
           git push origin "HEAD:${GITHUB_REF_NAME}"
           git push origin "refs/tags/${VERSION}"
 
