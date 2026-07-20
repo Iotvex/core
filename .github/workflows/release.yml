@@ -51,6 +51,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          VERSION=""
           git fetch --tags --force origin
 
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
