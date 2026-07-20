@@ -104,17 +104,27 @@ lib_deps =
 
 | Ветка | Назначение |
 |-------|------------|
-| `dev` | разработка и pre-release (`vX.Y.Z-dev.N`) |
+| `dev` | интеграция, pre-release теги (`vX.Y.Z-dev.N`) |
 | `main` | стабильные релизы (`vX.Y.Z`) |
 
 ### Процесс
 
-1. Работаешь в `dev` (или PR в `dev`)
-2. Пуш в `dev` → CI может сделать pre-release через Cocogitto
-3. Когда готово — PR `dev` → `main`
-4. Мерж в `main` → стабильный релиз
+1. Ветка от `dev`: `feature/...` или `fix/...`
+2. PR в `dev` → CI (conventional commits, тесты)
+3. Мерж в `dev` → при `feat`/`fix` CI ставит pre-release тег и синкает версию в манифестах
+4. Когда готово к релизу — PR `dev` → `main`
+5. Мерж в `main` → стабильный релиз: `CHANGELOG.md`, тег `vX.Y.Z`, GitHub Release
 
-Прямые пуши в `main` нежелательны.
+Прямые пуши в `main` и `dev` нежелательны — только через PR.
+
+### Changelog
+
+| Где | Что пишется |
+|-----|-------------|
+| `dev` | только pre-release теги и notes в GitHub Releases |
+| `main` | `CHANGELOG.md` + стабильный GitHub Release |
+
+Pre-release (`-dev.N`) в `CHANGELOG.md` не попадают.
 
 ### Коммиты
 
@@ -134,7 +144,7 @@ chore: tweak clang-format
 | `feat:` | MINOR |
 | `fix:` | PATCH |
 
-Релизы автоматизированы [Cocogitto](https://docs.cocogitto.io/): версия синкается в `idf_component.yml`, `library.json` и README, обновляется `CHANGELOG.md`, ставится тег и GitHub Release.
+Релизы автоматизированы [Cocogitto](https://docs.cocogitto.io/): на `dev` — pre-release тег и синк версии в `idf_component.yml` / `library.json` / README; на `main` — ещё и `CHANGELOG.md`.
 
 ## License
 
