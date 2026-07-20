@@ -6,6 +6,15 @@ See [conventional commits](https://www.conventionalcommits.org/) for commit guid
 Pre-releases (`vX.Y.Z-dev.N`) are published on GitHub only; this file lists **stable** releases.
 
 - - -
+## [v0.2.1](https://github.com/Iotvex/core/compare/5117b7ed2b1758c15ec3698129d5322aa2b60939..v0.2.1) - 2026-07-20
+#### Bug Fixes
+- (**ci**) initialize VERSION before dev pre-release bump - ([845c728](https://github.com/Iotvex/core/commit/845c72819fbfb66fcc54a7dad32039f48a745751)) - Cursor Agent, Xlebp Rjanoi
+- (**log**) reject whitespace-only format strings - ([27d49ff](https://github.com/Iotvex/core/commit/27d49ff70d8e1d1d3ade23878726d9b58a43295c)) - Cursor Agent, Xlebp Rjanoi
+#### Documentation
+- reset CHANGELOG to stable-only v0.1.0 and v0.2.0 - ([16be653](https://github.com/Iotvex/core/commit/16be653cdc59ec3ba08c4caa68182216c17a142b)) - Cursor Agent, Xlebp Rjanoi
+
+- - -
+
 ## [v0.2.0](https://github.com/Iotvex/core/compare/v0.1.0..v0.2.0) - 2026-07-20
 #### Features
 - add Error::BusyTimeout - ([aea3064](https://github.com/Iotvex/core/commit/aea306439db651623ce7695a42ddb31f0121f1ca))

@@ -2,7 +2,7 @@
 # Docs: https://docs.cocogitto.io/
 
 from_latest_tag = true
-disable_changelog = true
+disable_changelog = false
 ignore_merge_commits = true
 ignore_fixup_commits = true
 tag_prefix = "v"
