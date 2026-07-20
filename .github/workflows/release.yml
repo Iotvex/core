@@ -32,8 +32,11 @@ jobs:
           tar --strip-components=1 -xzf "/tmp/${TAR}" \
             -C "$HOME/.local/bin" \
             x86_64-unknown-linux-musl/cog
+          chmod +x "$HOME/.local/bin/cog" \
+            scripts/last-stable-tag.sh \
+            scripts/cog-changelog-mode.sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          "$HOME/.local/bin/cog" --version
+          cog --version
 
       - name: Check Conventional Commits
         run: cog check --from-latest-tag
@@ -50,12 +53,15 @@ jobs:
           set -euo pipefail
           git fetch --tags --force origin
 
-          # Latest SemVer tag reachable from HEAD, including pre-releases.
-          # cog `from_latest_tag` ignores pre-releases when deciding the next
-          # core version, so without this gate every push to `dev` would mint
-          # another pre-release until feats are merged to a stable main tag.
-          LATEST_TAG="$(git tag --merged HEAD --list 'v*' | sort -V | tail -n1 || true)"
-          echo "Latest reachable tag: ${LATEST_TAG:-<none>}"
+          if [ "${GITHUB_REF_NAME}" = "dev" ]; then
+            # Pre-release: tag + manifest sync only (no CHANGELOG.md).
+            LATEST_TAG="$(git tag --merged HEAD --list 'v*' | sort -V | tail -n1 || true)"
+          else
+            # Stable: commits since the last stable tag (ignore -dev.* tags).
+            LATEST_TAG="$(bash scripts/last-stable-tag.sh || true)"
+          fi
+
+          echo "Baseline tag: ${LATEST_TAG:-<none>}"
 
           if [ -n "${LATEST_TAG}" ]; then
             RANGE="${LATEST_TAG}..HEAD"
@@ -76,11 +82,16 @@ jobs:
           printf '%s\n' "${RELEASABLE}"
 
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
-            echo "Pre-release bump on dev (dev.*)"
+            echo "Pre-release bump on dev (dev.*), CHANGELOG skipped"
+            bash scripts/cog-changelog-mode.sh disable
             cog bump --auto --pre "dev.*"
           else
-            echo "Stable bump on main"
+            echo "Stable bump on main, updating CHANGELOG"
+            bash scripts/cog-changelog-mode.sh enable
             cog bump --auto
+            bash scripts/cog-changelog-mode.sh disable
+            git add cog.toml
+            git commit --amend --no-edit
           fi
 
           VERSION="$(git tag --points-at HEAD | head -n1)"
