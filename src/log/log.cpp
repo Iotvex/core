@@ -61,6 +61,19 @@ void format_timestamp_iso8601(char *out, size_t out_size)
              static_cast<int>(tv.tv_usec / 1000));
 }
 
+bool is_blank(const char *text)
+{
+    if (text == nullptr || text[0] == '\0') {
+        return true;
+    }
+    for (const char *p = text; *p != '\0'; ++p) {
+        if (*p != ' ' && *p != '\t' && *p != '\n' && *p != '\r') {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Core output path for all log levels.
 // 1. Build tag "iotvex.<channel>"
 // 2. Drop if above esp_log_level_get(tag)
@@ -69,8 +82,7 @@ void format_timestamp_iso8601(char *out, size_t out_size)
 void write(esp_log_level_t level, const char *channel, const char *fmt,
            va_list args)
 {
-    if (channel == nullptr || channel[0] == '\0' || fmt == nullptr ||
-        fmt[0] == '\0') {
+    if (is_blank(channel) || is_blank(fmt)) {
         return;
     }
 
