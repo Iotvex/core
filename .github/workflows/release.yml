@@ -21,11 +21,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install Cocogitto
-        uses: cocogitto/cocogitto-action@v3
+        uses: cocogitto/cocogitto-action@v4
         with:
-          check: true
-          check-latest-tag-only: true
-          release: false
+          install-only: true
+
+      - name: Check Conventional Commits
+        run: cog check --from-latest-tag
 
       - name: Configure git
         run: |
@@ -39,7 +40,7 @@ jobs:
           set -euo pipefail
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
             echo "Pre-release bump on dev (dev.*)"
-            cog bump --auto --pre
+            cog bump --auto --pre "dev.*"
           else
             echo "Stable bump on main"
             cog bump --auto
