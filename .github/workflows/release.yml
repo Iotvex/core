@@ -89,17 +89,23 @@ jobs:
             echo "Stable bump on main, updating CHANGELOG"
             bash scripts/cog-changelog-mode.sh enable
             cog bump --auto --skip-untracked
+            VERSION="$(git tag --points-at HEAD | head -n1)"
             bash scripts/cog-changelog-mode.sh disable
             git add cog.toml
-            git commit --amend --no-edit
+            git commit -m "chore: restore disable_changelog in cog.toml [skip ci]"
           fi
 
-          VERSION="$(git tag --points-at HEAD | head -n1)"
+          if [ -z "${VERSION}" ]; then
+            VERSION="$(git tag --points-at HEAD | head -n1)"
+          fi
+          if [ -z "${VERSION}" ]; then
+            VERSION="$(git tag --list 'v*' --sort=-v:refname | grep -Ev -- '-(dev|alpha|beta|rc)(\.|$)' | head -n1 || true)"
+          fi
           if [ -z "${VERSION}" ]; then
             VERSION="$(git describe --tags --exact-match HEAD 2>/dev/null || true)"
           fi
           if [ -z "${VERSION}" ]; then
-            echo "Bump produced no tag on HEAD"
+            echo "Bump produced no tag"
             exit 1
           fi
 
