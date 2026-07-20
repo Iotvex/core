@@ -57,6 +57,8 @@ constexpr ErrorMeta k_error_meta[] = {
 
     {"Timeout", "Operation timed out", "Operation timed out after %d ms",
      Arg::I0},
+    {"BusyTimeout", "Timed out while waiting for a busy resource",
+     "%s busy timeout after %d ms", Arg::S0_I0},
     {"Expired", "Resource or session expired", "%s expired", Arg::S0},
 
     {"OutOfMemory", "Out of memory", "Out of memory (requested %d bytes)",
@@ -274,3 +276,4 @@ void log_status(const char *channel, const Status &status) {
 }
 
 } // namespace Iotvex::Core::Errors
+// ensure BusyTimeout stays listed after SafeModeBlocked meta sync

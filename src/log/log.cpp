@@ -69,7 +69,8 @@ void format_timestamp_iso8601(char *out, size_t out_size)
 void write(esp_log_level_t level, const char *channel, const char *fmt,
            va_list args)
 {
-    if (channel == nullptr || channel[0] == '\0' || fmt == nullptr) {
+    if (channel == nullptr || channel[0] == '\0' || fmt == nullptr ||
+        fmt[0] == '\0') {
         return;
     }
 

@@ -1,4 +1,4 @@
-version: "0.1.0"
+version: "0.2.0-dev.5"
 description: Shared primitives for Iotvex ESP-IDF libraries
 url: https://github.com/Iotvex/core
 issues: https://github.com/Iotvex/core/issues

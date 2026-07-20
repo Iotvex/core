@@ -16,9 +16,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Cocogitto 7.0.0
+        run: |
+          set -euo pipefail
+          VERSION=7.0.0
+          TAR="cocogitto-${VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL -o "/tmp/${TAR}" \
+            "https://github.com/cocogitto/cocogitto/releases/download/${VERSION}/${TAR}"
+          tar --strip-components=1 -xzf "/tmp/${TAR}" \
+            -C "$HOME/.local/bin" \
+            x86_64-unknown-linux-musl/cog
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/cog" --version
+
       - name: Check Conventional Commits
-        uses: cocogitto/cocogitto-action@v3
-        with:
-          check: true
-          check-latest-tag-only: true
-          release: false
+        run: cog check --from-latest-tag
