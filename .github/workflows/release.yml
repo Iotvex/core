@@ -84,11 +84,11 @@ jobs:
           if [ "${GITHUB_REF_NAME}" = "dev" ]; then
             echo "Pre-release bump on dev (dev.*), CHANGELOG skipped"
             bash scripts/cog-changelog-mode.sh disable
-            cog bump --auto --pre "dev.*"
+            cog bump --auto --pre "dev.*" --skip-untracked
           else
             echo "Stable bump on main, updating CHANGELOG"
             bash scripts/cog-changelog-mode.sh enable
-            cog bump --auto
+            cog bump --auto --skip-untracked
             bash scripts/cog-changelog-mode.sh disable
             git add cog.toml
             git commit --amend --no-edit
