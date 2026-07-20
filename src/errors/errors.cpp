@@ -276,4 +276,3 @@ void log_status(const char *channel, const Status &status) {
 }
 
 } // namespace Iotvex::Core::Errors
-// release pipeline smoke test
