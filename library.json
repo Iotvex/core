@@ -1,6 +1,6 @@
 {
   "name": "IotvexCore",
-  "version": "0.2.0-dev.2",
+  "version": "0.2.0-dev.3",
   "description": "Shared primitives for Iotvex ESP-IDF libraries",
   "keywords": "iotvex, core, esp32, esp-idf, logging, errors",
   "authors": [
