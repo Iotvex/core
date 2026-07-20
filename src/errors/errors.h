@@ -45,6 +45,7 @@ enum class Error {
     Conflict,
 
     Timeout,
+    BusyTimeout,
     Expired,
 
     OutOfMemory,
