@@ -276,3 +276,4 @@ void log_status(const char *channel, const Status &status) {
 }
 
 } // namespace Iotvex::Core::Errors
+// ensure BusyTimeout stays listed after SafeModeBlocked meta sync
