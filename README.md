@@ -1,14 +1,34 @@
 # IotvexCore
 
-Shared primitives for Iotvex ESP-IDF libraries: typed errors (`Status`) and structured logging.
+Shared primitives for [Iotvex](https://github.com/Iotvex) ESP-IDF libraries: typed errors (`Status`) and structured logging.
 
 **Version:** `0.1.0`
 
+| | |
+|---|---|
+| License | MIT |
+| Language | C++17 |
+| Framework | ESP-IDF `>= 5.1.0` |
+| Platforms | ESP32 (espressif32) |
+
+## What it provides
+
+| Module | Namespace | Role |
+|--------|-----------|------|
+| **Errors** | `Iotvex::Core::Errors` | Unified `Error` codes + `Status` with short/detail messages |
+| **Log** | `Iotvex::Core::Log` | Structured one-line logs with node name, node id, UTC, sequence |
+
+Consumers include a single umbrella header:
+
+```cpp
+#include <IotvexCore.h>
+```
+
 ## Install
 
-### ESP-IDF (local path)
+### ESP-IDF — local path
 
-In your project's or dependent component's `idf_component.yml`:
+In the project's or dependent component's `idf_component.yml`:
 
 ```yaml
 dependencies:
@@ -16,7 +36,7 @@ dependencies:
     path: ../core
 ```
 
-### ESP-IDF (git tag / origin)
+### ESP-IDF — git tag
 
 ```yaml
 dependencies:
@@ -25,7 +45,7 @@ dependencies:
     version: v0.1.0
 ```
 
-In `CMakeLists.txt` of the consuming component:
+In the consuming component's `CMakeLists.txt`:
 
 ```cmake
 REQUIRES iotvex__core
@@ -38,7 +58,7 @@ lib_deps =
   https://github.com/Iotvex/core.git#v0.1.0
 ```
 
-## Usage
+## Quick start
 
 ```cpp
 #include <IotvexCore.h>
@@ -64,25 +84,104 @@ Errors::Status init() {
 }
 ```
 
-Filter ESP-IDF logs by tag, e.g. `iotvex.node.storage`:
+Filter ESP-IDF logs by tag, for example `iotvex.node.storage`:
 
 ```c
 esp_log_level_set("iotvex.node.storage", ESP_LOG_DEBUG);
 ```
 
-## Public API
+## Errors
 
-Consumers include only the umbrella header:
+Typed error layer shared across Iotvex libraries.
+
+**Two text levels:**
+
+| Level | API | Example |
+|-------|-----|---------|
+| Short | `error_name(code)` | `"NotFound"` |
+| Detail | `status_detail(status)` | `"config.json not found"` |
+
+**Create a status:**
 
 ```cpp
-#include <IotvexCore.h>
+// Generic built-in description
+Errors::fail(Errors::Error::NotFound);
+// -> "Requested item was not found"
+
+// Built-in template with context
+Errors::fail(Errors::Error::NotFound,
+             Errors::ErrorContext::with_str("config.json"));
+// -> "config.json not found"
+
+// Fully custom printf-style detail
+Errors::fail(Errors::Error::NotFound, "missing key %s in %s", "pin", "profile");
 ```
 
-Implementation headers live next to sources (`src/errors/errors.h`, `src/log/log.h`) and are on the component include path.
+**Helpers:**
+
+| Macro / API | Purpose |
+|-------------|---------|
+| `IX_RETURN_IF_ERROR(expr)` | Early-return if `Status` is not ok |
+| `IX_FAIL(code, fmt, ...)` | `return fail(...)` |
+| `IX_LOGE_STATUS(channel, status)` | Log a failed status on a channel |
+| `annotate(inner, fmt, ...)` | Wrap an inner status with extra context |
+| `format_status(status, buf, len)` | Format `"NotFound: detail"` into a buffer |
+
+`Status` is truthy on success (`explicit operator bool` / `.ok()`). Message buffer is 96 bytes.
+
+Common codes include `NotFound`, `Timeout`, `OutOfMemory`, `NetworkError`, `ConfigError`, `HardwareError`, and others — see `src/errors/errors.h`.
+
+## Logging
+
+Structured single-line format on top of ESP-IDF `log`:
+
+```text
+(seq) [UTC] [LEVEL] [name] iotvex.<channel>: message (node-id:id)
+```
+
+Example:
+
+```text
+(42) [2026-07-11T15:30:22.123Z] [INFO] [c6-kitchen] iotvex.node.lifecycle: started (node-id:22323)
+```
+
+| Field | Source |
+|-------|--------|
+| `seq` | Auto-incrementing counter (atomic) |
+| `UTC` | ISO 8601 timestamp (needs SNTP for a real clock) |
+| `LEVEL` | `DEBUG` / `INFO` / `WARN` / `ERROR` |
+| `name` | `Log::set_node_name()` — max 47 chars |
+| `channel` | Module path **without** the `iotvex.` prefix |
+| `node-id` | `Log::set_node_id()` — max 47 chars |
+
+**Macros (preferred at call sites):**
+
+```cpp
+IX_LOGD("node.lifecycle", "boot step %d", step);
+IX_LOGI("node.lifecycle", "started");
+IX_LOGW("light.devices", "retry %d", n);
+IX_LOGE("light.drivers.pixel", "init failed on pin %d", pin);
+```
+
+Call `set_node_name` / `set_node_id` once at boot before other tasks log. Unset values print as `<unset>`. Only `IX_LOG*` / `Log::{debug,info,warn,error}` use this format — raw `ESP_LOGI()` is unchanged.
+
+ESP-IDF filter tag: `iotvex.<channel>`.
+
+## Layout
+
+```text
+include/IotvexCore.h   # public umbrella header
+src/errors/            # Status / Error / macros
+src/log/               # structured logging
+scripts/               # release helpers (version sync)
+.github/workflows/     # Conventional Commits + release CI
+```
+
+Implementation headers (`errors.h`, `log.h`) sit next to sources and are on the component include path via `CMakeLists.txt` / PlatformIO flags.
 
 ## Versioning & releases
 
-Automated SemVer via **[Cocogitto](https://docs.cocogitto.io/)** (no Node).
+Automated SemVer via [Cocogitto](https://docs.cocogitto.io/) (no Node).
 
 | Branch | Trigger | Result |
 |--------|---------|--------|
@@ -93,9 +192,9 @@ Automated SemVer via **[Cocogitto](https://docs.cocogitto.io/)** (no Node).
 |--------|--------|------|
 | Breaking API | `feat!: ...` or `BREAKING CHANGE:` footer | MAJOR |
 | Backward-compatible feature | `feat: ...` | MINOR |
-| Bugfix | `fix: ...` | PATCH |
+| Bug fix | `fix: ...` | PATCH |
 
-CI syncs version into `idf_component.yml` + `library.json`, updates `CHANGELOG.md`, tags, and publishes a GitHub Release (`dev` tags are marked prerelease).
+CI syncs the version into `idf_component.yml` + `library.json` (+ README), updates `CHANGELOG.md`, tags the repo, and publishes a GitHub Release (`dev` tags are marked prerelease).
 
 ### Workflow
 
@@ -106,7 +205,7 @@ CI syncs version into `idf_component.yml` + `library.json`, updates `CHANGELOG.m
 
 ### Commit style (required)
 
-```
+```text
 feat: add Error::BusyTimeout
 fix: guard null log channel
 feat!: resize Status message buffer
@@ -120,3 +219,8 @@ PR checks enforce Conventional Commits since the latest tag.
 
 - ESP-IDF `>= 5.1.0`
 - C++17
+- Component dependency: ESP-IDF `log`
+
+## License
+
+[MIT](LICENSE) © 2026 Xlebp Rjanoi
