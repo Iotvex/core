@@ -45,7 +45,7 @@ enum class Error {
     Conflict,
 
     Timeout,
-    BusyTimeout, // wait expired while resource stayed busy (pre-release tags only on dev)
+    BusyTimeout,
     Expired,
 
     OutOfMemory,
